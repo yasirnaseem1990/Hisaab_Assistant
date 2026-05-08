@@ -1,0 +1,30 @@
+[
+    {
+        "merged": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-merged_res-53:/xml_data_extraction_rules.xml.flat",
+        "source": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-main-54:/xml/data_extraction_rules.xml"
+    },
+    {
+        "merged": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-merged_res-53:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-main-54:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-merged_res-53:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-main-54:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-merged_res-53:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-main-54:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-merged_res-53:/xml_backup_rules.xml.flat",
+        "source": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-main-54:/xml/backup_rules.xml"
+    },
+    {
+        "merged": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-merged_res-53:/drawable_ic_launcher_background.xml.flat",
+        "source": "/Users/yasirnaseem/.gradle/daemon/8.4/hissab.assistant.pk.app-main-54:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "hissab.assistant.pk.app-merged_res-53:/xml_file_paths.xml.flat",
+        "source": "hissab.assistant.pk.app-main-54:/xml/file_paths.xml"
+    }
+]

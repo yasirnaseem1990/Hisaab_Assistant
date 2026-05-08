@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Hisaab Assistant</string>
+    <string name="webview_url">https://main.d2j64p9g0am2pq.amplifyapp.com</string>
+    <string name="error_no_internet">No internet connection. Please check your network and try again.</string>
+    <string name="error_loading_page">Failed to load page. Please try again.</string>
+    <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
+</resources>

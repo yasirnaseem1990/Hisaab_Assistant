@@ -1,0 +1,55 @@
+hissab.assistant.pk.app-animation-core-release-0 /Users/yasirnaseem/.gradle/caches/transforms-3/07f70da48d4d6bc8fc9a19f8d6715b47/transformed/animation-core-release/res
+hissab.assistant.pk.app-ui-util-release-1 /Users/yasirnaseem/.gradle/caches/transforms-3/0f6e5a039ba1342b62af51f93980e6b8/transformed/ui-util-release/res
+hissab.assistant.pk.app-profileinstaller-1.3.0-2 /Users/yasirnaseem/.gradle/caches/transforms-3/149f2d06a5c3c33d9a49c22e35f7685e/transformed/profileinstaller-1.3.0/res
+hissab.assistant.pk.app-navigation-common-2.7.6-3 /Users/yasirnaseem/.gradle/caches/transforms-3/1bf59a932fa82abdd685bbd23f67f0b9/transformed/navigation-common-2.7.6/res
+hissab.assistant.pk.app-ui-geometry-release-4 /Users/yasirnaseem/.gradle/caches/transforms-3/1c42b7d1045e9fa057f5507c8a23125d/transformed/ui-geometry-release/res
+hissab.assistant.pk.app-activity-1.8.2-5 /Users/yasirnaseem/.gradle/caches/transforms-3/2128a261982f90687253ceda06cd13bb/transformed/activity-1.8.2/res
+hissab.assistant.pk.app-core-1.12.0-6 /Users/yasirnaseem/.gradle/caches/transforms-3/28ad8e67864089b395be0f3a0dce2dff/transformed/core-1.12.0/res
+hissab.assistant.pk.app-foundation-layout-release-7 /Users/yasirnaseem/.gradle/caches/transforms-3/2d90383324caa77e0c653c9325915ce3/transformed/foundation-layout-release/res
+hissab.assistant.pk.app-animation-release-8 /Users/yasirnaseem/.gradle/caches/transforms-3/34ed4a8d8bc818a6c93e5379e279cdaf/transformed/animation-release/res
+hissab.assistant.pk.app-material-icons-core-release-9 /Users/yasirnaseem/.gradle/caches/transforms-3/350f5155c656fc57367268732eeb1371/transformed/material-icons-core-release/res
+hissab.assistant.pk.app-ui-graphics-release-10 /Users/yasirnaseem/.gradle/caches/transforms-3/375a976f7710e542f66e590e3e193aff/transformed/ui-graphics-release/res
+hissab.assistant.pk.app-lifecycle-runtime-compose-2.7.0-11 /Users/yasirnaseem/.gradle/caches/transforms-3/39dc70bd25b2a5629466e0afc8bc24d4/transformed/lifecycle-runtime-compose-2.7.0/res
+hissab.assistant.pk.app-lifecycle-runtime-ktx-2.7.0-12 /Users/yasirnaseem/.gradle/caches/transforms-3/41247fd26bec58dfb337b2cf213294c2/transformed/lifecycle-runtime-ktx-2.7.0/res
+hissab.assistant.pk.app-ui-unit-release-13 /Users/yasirnaseem/.gradle/caches/transforms-3/44c0fee0833bc9ed435cd1eb8d0e0bed/transformed/ui-unit-release/res
+hissab.assistant.pk.app-material3-release-14 /Users/yasirnaseem/.gradle/caches/transforms-3/4739da635f968aa9311dda72c1feb82c/transformed/material3-release/res
+hissab.assistant.pk.app-hilt-navigation-compose-1.1.0-15 /Users/yasirnaseem/.gradle/caches/transforms-3/48d5d09458ae1f4e5fe7b9d117472d58/transformed/hilt-navigation-compose-1.1.0/res
+hissab.assistant.pk.app-lifecycle-viewmodel-compose-2.7.0-16 /Users/yasirnaseem/.gradle/caches/transforms-3/4e352098350b41b938d72317b5de2759/transformed/lifecycle-viewmodel-compose-2.7.0/res
+hissab.assistant.pk.app-material-ripple-release-17 /Users/yasirnaseem/.gradle/caches/transforms-3/4efcad31abfc0427a4cc9875bcd4ac31/transformed/material-ripple-release/res
+hissab.assistant.pk.app-lifecycle-process-2.7.0-18 /Users/yasirnaseem/.gradle/caches/transforms-3/4f4287ebfda2f133ee8cd36cface7101/transformed/lifecycle-process-2.7.0/res
+hissab.assistant.pk.app-savedstate-ktx-1.2.1-19 /Users/yasirnaseem/.gradle/caches/transforms-3/5158503e07dd53a47f5a61d1aba42c4c/transformed/savedstate-ktx-1.2.1/res
+hissab.assistant.pk.app-fragment-1.5.1-20 /Users/yasirnaseem/.gradle/caches/transforms-3/57f35197f844c539bddf17fb65e1660a/transformed/fragment-1.5.1/res
+hissab.assistant.pk.app-lifecycle-livedata-core-ktx-2.7.0-21 /Users/yasirnaseem/.gradle/caches/transforms-3/6202a6aa7b026e1c941fb69b29dbbf2a/transformed/lifecycle-livedata-core-ktx-2.7.0/res
+hissab.assistant.pk.app-foundation-release-22 /Users/yasirnaseem/.gradle/caches/transforms-3/72e6f4bd161c6ceab8ca0df40aad4227/transformed/foundation-release/res
+hissab.assistant.pk.app-savedstate-1.2.1-23 /Users/yasirnaseem/.gradle/caches/transforms-3/7a458973e10e1f2ff9ca07ee8b139a27/transformed/savedstate-1.2.1/res
+hissab.assistant.pk.app-navigation-compose-2.7.6-24 /Users/yasirnaseem/.gradle/caches/transforms-3/7f4e3d8e17ef5754a46e4776ff40bf72/transformed/navigation-compose-2.7.6/res
+hissab.assistant.pk.app-ui-text-release-25 /Users/yasirnaseem/.gradle/caches/transforms-3/7f6365d0e9952053def00e75998d19ac/transformed/ui-text-release/res
+hissab.assistant.pk.app-runtime-saveable-release-26 /Users/yasirnaseem/.gradle/caches/transforms-3/8775949e9d7a3d4a6af3ea41b9112af1/transformed/runtime-saveable-release/res
+hissab.assistant.pk.app-lifecycle-livedata-core-2.7.0-27 /Users/yasirnaseem/.gradle/caches/transforms-3/87acc12685794f5f442c221ce5fbe183/transformed/lifecycle-livedata-core-2.7.0/res
+hissab.assistant.pk.app-activity-ktx-1.8.2-28 /Users/yasirnaseem/.gradle/caches/transforms-3/995482d8cfe4175a487415bb6332a5ec/transformed/activity-ktx-1.8.2/res
+hissab.assistant.pk.app-ui-tooling-preview-release-29 /Users/yasirnaseem/.gradle/caches/transforms-3/9da805776d5b7b0ac151c44ecfa8a79f/transformed/ui-tooling-preview-release/res
+hissab.assistant.pk.app-core-ktx-1.12.0-30 /Users/yasirnaseem/.gradle/caches/transforms-3/a1f03a6e8b4a73ecc51048d90ba027c5/transformed/core-ktx-1.12.0/res
+hissab.assistant.pk.app-lifecycle-livedata-2.7.0-31 /Users/yasirnaseem/.gradle/caches/transforms-3/a225e4eccc366b41ca3a8295090b4f22/transformed/lifecycle-livedata-2.7.0/res
+hissab.assistant.pk.app-core-runtime-2.2.0-32 /Users/yasirnaseem/.gradle/caches/transforms-3/a23f90ccf2e5b13cfa9ba36fec3634b9/transformed/core-runtime-2.2.0/res
+hissab.assistant.pk.app-lifecycle-viewmodel-ktx-2.7.0-33 /Users/yasirnaseem/.gradle/caches/transforms-3/a29280a2bc26f9dc935f3c71894cf1df/transformed/lifecycle-viewmodel-ktx-2.7.0/res
+hissab.assistant.pk.app-customview-poolingcontainer-1.0.0-34 /Users/yasirnaseem/.gradle/caches/transforms-3/bb7be2541db4cfaa93b1516f98af4d71/transformed/customview-poolingcontainer-1.0.0/res
+hissab.assistant.pk.app-ui-release-35 /Users/yasirnaseem/.gradle/caches/transforms-3/c60b2e8d09090b490bfb5ed4bfe1f205/transformed/ui-release/res
+hissab.assistant.pk.app-lifecycle-viewmodel-savedstate-2.7.0-36 /Users/yasirnaseem/.gradle/caches/transforms-3/cf30e15eaec307b2dcd529807cf93425/transformed/lifecycle-viewmodel-savedstate-2.7.0/res
+hissab.assistant.pk.app-material-icons-extended-release-37 /Users/yasirnaseem/.gradle/caches/transforms-3/d032359a33309418a52c9662d0ddb4ae/transformed/material-icons-extended-release/res
+hissab.assistant.pk.app-runtime-release-38 /Users/yasirnaseem/.gradle/caches/transforms-3/d07094e848cac63b6bdbb8e4a4ffbf12/transformed/runtime-release/res
+hissab.assistant.pk.app-hilt-navigation-1.1.0-39 /Users/yasirnaseem/.gradle/caches/transforms-3/d3a7207e3f04272843e75c9a39050b7f/transformed/hilt-navigation-1.1.0/res
+hissab.assistant.pk.app-emoji2-1.3.0-40 /Users/yasirnaseem/.gradle/caches/transforms-3/db4c1f5270c95f061c06015542931d91/transformed/emoji2-1.3.0/res
+hissab.assistant.pk.app-annotation-experimental-1.4.0-41 /Users/yasirnaseem/.gradle/caches/transforms-3/e081b1cde724392812feca52681a08f0/transformed/annotation-experimental-1.4.0/res
+hissab.assistant.pk.app-navigation-runtime-2.7.6-42 /Users/yasirnaseem/.gradle/caches/transforms-3/e23d87a375b9dc33e6bbe542c9314fb4/transformed/navigation-runtime-2.7.6/res
+hissab.assistant.pk.app-lifecycle-runtime-2.7.0-43 /Users/yasirnaseem/.gradle/caches/transforms-3/e2ea4ead1ca1bce95fe016a09883dd1d/transformed/lifecycle-runtime-2.7.0/res
+hissab.assistant.pk.app-navigation-common-ktx-2.7.6-44 /Users/yasirnaseem/.gradle/caches/transforms-3/e594ef44beae02f3278b3b3be7115975/transformed/navigation-common-ktx-2.7.6/res
+hissab.assistant.pk.app-startup-runtime-1.1.1-45 /Users/yasirnaseem/.gradle/caches/transforms-3/f41ba8dd9371d3d441bfb6dd9abb891f/transformed/startup-runtime-1.1.1/res
+hissab.assistant.pk.app-lifecycle-viewmodel-2.7.0-46 /Users/yasirnaseem/.gradle/caches/transforms-3/f813f340e2874ce1da1a36f21c8491b2/transformed/lifecycle-viewmodel-2.7.0/res
+hissab.assistant.pk.app-navigation-runtime-ktx-2.7.6-47 /Users/yasirnaseem/.gradle/caches/transforms-3/f93eb3be6c90a87d73bfd90e2b78bcea/transformed/navigation-runtime-ktx-2.7.6/res
+hissab.assistant.pk.app-activity-compose-1.8.2-48 /Users/yasirnaseem/.gradle/caches/transforms-3/fa6fc1b3fd431b7a3e2f42c0b53522c8/transformed/activity-compose-1.8.2/res
+hissab.assistant.pk.app-resValues-49 /Users/yasirnaseem/OfficeProjects/Hisaab Assistant/app/build/generated/res/resValues/release
+hissab.assistant.pk.app-packageReleaseResources-50 /Users/yasirnaseem/OfficeProjects/Hisaab Assistant/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
+hissab.assistant.pk.app-packageReleaseResources-51 /Users/yasirnaseem/OfficeProjects/Hisaab Assistant/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
+hissab.assistant.pk.app-merged_res-52 /Users/yasirnaseem/OfficeProjects/Hisaab Assistant/app/build/intermediates/merged_res/release
+hissab.assistant.pk.app-main-53 /Users/yasirnaseem/OfficeProjects/Hisaab Assistant/app/src/main/res
+hissab.assistant.pk.app-release-54 /Users/yasirnaseem/OfficeProjects/Hisaab Assistant/app/src/release/res
