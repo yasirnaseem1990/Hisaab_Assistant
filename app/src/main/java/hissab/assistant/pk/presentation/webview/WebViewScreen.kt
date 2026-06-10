@@ -358,6 +358,11 @@ private fun WebView.configureSettings() {
         ViewGroup.LayoutParams.MATCH_PARENT
     )
 
+    // Disable native long click behaviors (e.g. text selection, magnifier, context menu)
+    // which would otherwise send touchcancel to JavaScript and interrupt press-and-hold gestures.
+    isLongClickable = true
+    setOnLongClickListener { true }
+
     settings.apply {
         javaScriptEnabled = true
         domStorageEnabled = true
