@@ -21,6 +21,6 @@ class WebViewRepositoryImpl @Inject constructor() : WebViewRepository {
     )
 
     private companion object {
-        const val DEFAULT_URL = "https://main.d2j64p9g0am2pq.amplifyapp.com"
+        const val DEFAULT_URL = "https://app.myhisaab.pk/login"
     }
 }

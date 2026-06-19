@@ -4,7 +4,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import hissab.assistant.pk.data.image.ImageProcessorImpl
 import hissab.assistant.pk.data.repository.WebViewRepositoryImpl
+import hissab.assistant.pk.domain.repository.ImageProcessor
 import hissab.assistant.pk.domain.repository.WebViewRepository
 import javax.inject.Singleton
 
@@ -24,4 +26,10 @@ abstract class AppModule {
     abstract fun bindWebViewRepository(
         impl: WebViewRepositoryImpl,
     ): WebViewRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindImageProcessor(
+        impl: ImageProcessorImpl,
+    ): ImageProcessor
 }

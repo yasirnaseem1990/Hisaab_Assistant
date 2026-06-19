@@ -5,4 +5,13 @@
     <string name="error_loading_page">Failed to load page. Please try again.</string>
     <string name="retry">Retry</string>
     <string name="loading">Loading…</string>
+
+    <!-- Camera overlay -->
+    <string name="camera_close">Close camera</string>
+    <string name="camera_switch">Switch camera</string>
+    <string name="camera_capture_failed">Couldn\'t take the photo. Please try again.</string>
+    <string name="camera_permission_rationale">Camera access is needed to take a photo. Please allow camera access to continue.</string>
+    <string name="camera_grant_permission">Allow camera</string>
+    <string name="open_settings">Open settings</string>
+    <string name="cancel">Cancel</string>
 </resources>

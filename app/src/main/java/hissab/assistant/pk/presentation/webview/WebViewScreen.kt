@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.util.Base64
 import android.view.ViewGroup
 import android.webkit.PermissionRequest
 import android.webkit.RenderProcessGoneDetail
@@ -69,8 +70,11 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hissab.assistant.pk.R
+import hissab.assistant.pk.presentation.camera.CameraOverlay
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
@@ -93,15 +97,16 @@ fun WebViewScreen(
     var webViewRef: WebView? by remember { mutableStateOf<WebView?>(null) }
     var canGoBack: Boolean by remember { mutableStateOf(false) }
 
+    // Controls visibility of the native in-app camera overlay, opened via the
+    // JS bridge (window.AndroidBridge.openCamera()).
+    var showCameraOverlay: Boolean by remember { mutableStateOf(false) }
+
     // --- State for Image Picking ---
     var filePathCallback: ValueCallback<Array<Uri>>? by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
     var showImageSourceSheet: Boolean by remember { mutableStateOf(false) }
     val sheetState: SheetState = rememberModalBottomSheetState()
 
-    // To store the temporary URI for camera capture
-    var tempCameraUri: Uri? by remember { mutableStateOf<Uri?>(null) }
-
-    // 1. Gallery Launcher
+    // Gallery Launcher (system picker — matches iOS "Photo Library").
     val galleryLauncher: ManagedActivityResultLauncher<String, List<@JvmSuppressWildcards Uri>> = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents(),
         onResult = { uris ->
@@ -110,52 +115,21 @@ fun WebViewScreen(
         }
     )
 
-    // 2. Camera Launcher
-    val cameraLauncher: ManagedActivityResultLauncher<Uri, Boolean> = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture(),
-        onResult = { success ->
-            if (success && tempCameraUri != null) {
-                filePathCallback?.onReceiveValue(arrayOf(tempCameraUri!!))
-            } else {
-                filePathCallback?.onReceiveValue(null)
-            }
-            filePathCallback = null
-            tempCameraUri = null
-        }
-    )
-
-    // 2. Permission Request (Camera/Mic)
+    // Permission Request for the WebView's own getUserMedia (camera/mic) requests.
+    // The in-app camera overlay handles its OWN camera permission internally.
     var pendingPermissionRequest: PermissionRequest? by remember { mutableStateOf<PermissionRequest?>(null) }
-    var isManualCameraRequest: Boolean by remember { mutableStateOf(false) }
 
     val permissionLauncher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>> =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
             onResult = { permissions ->
                 val allGranted: Boolean = permissions.values.all { it }
-
-                if (isManualCameraRequest) {
-                    if (allGranted) {
-                        val tempFile = createTempImageFile(context)
-                        tempCameraUri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            tempFile
-                        )
-                        cameraLauncher.launch(tempCameraUri!!)
-                    } else {
-                        filePathCallback?.onReceiveValue(null)
-                        filePathCallback = null
-                    }
-                    isManualCameraRequest = false
+                if (allGranted) {
+                    pendingPermissionRequest?.grant(pendingPermissionRequest?.resources)
                 } else {
-                    if (allGranted) {
-                        pendingPermissionRequest?.grant(pendingPermissionRequest?.resources)
-                    } else {
-                        pendingPermissionRequest?.deny()
-                    }
-                    pendingPermissionRequest = null
+                    pendingPermissionRequest?.deny()
                 }
+                pendingPermissionRequest = null
             }
         )
 
@@ -184,11 +158,14 @@ fun WebViewScreen(
         }
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(WindowInsets.safeDrawing.asPaddingValues())
-    ) {
+    Box(modifier = modifier.fillMaxSize()) {
+        // Inset content layer (WebView, loading, error). The camera overlay below
+        // is intentionally OUTSIDE this padding so it can render edge-to-edge.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(WindowInsets.safeDrawing.asPaddingValues())
+        ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Loading State UI
             if (uiState.isLoading && uiState.progress < 100) {
@@ -261,6 +238,14 @@ fun WebViewScreen(
                             }
                         }
 
+                        // JS bridge: lets the web app open the native camera
+                        // overlay. The bridge marshals the callback to the main
+                        // thread internally, so flipping Compose state here is safe.
+                        addJavascriptInterface(
+                            WebAppBridge(onOpenCamera = { showCameraOverlay = true }),
+                            WebAppBridge.NAME,
+                        )
+
                         webViewRef = this
                         loadUrl(uiState.url)
                     }
@@ -300,26 +285,13 @@ fun WebViewScreen(
                         text = "Camera",
                         icon = Icons.Default.PhotoCamera,
                         onClick = {
+                            // Open the in-app camera overlay (over the WebView)
+                            // instead of the system camera app. The pending
+                            // filePathCallback stays alive until the overlay
+                            // returns a photo (or is dismissed).
                             scope.launch { sheetState.hide() }.invokeOnCompletion {
                                 showImageSourceSheet = false
-
-                                val hasCameraPermission = ContextCompat.checkSelfPermission(
-                                    context,
-                                    Manifest.permission.CAMERA
-                                ) == PackageManager.PERMISSION_GRANTED
-
-                                if (hasCameraPermission) {
-                                    val tempFile = createTempImageFile(context)
-                                    tempCameraUri = FileProvider.getUriForFile(
-                                        context,
-                                        "${context.packageName}.fileprovider",
-                                        tempFile
-                                    )
-                                    cameraLauncher.launch(tempCameraUri!!)
-                                } else {
-                                    isManualCameraRequest = true
-                                    permissionLauncher.launch(arrayOf(Manifest.permission.CAMERA))
-                                }
+                                showCameraOverlay = true
                             }
                         }
                     )
@@ -348,6 +320,55 @@ fun WebViewScreen(
                 }
             )
         }
+        } // end inset content layer
+
+        // --- Native in-app Camera overlay (over the WebView) ---
+        // Opened from the file-chooser "Camera" option, or the JS bridge.
+        if (showCameraOverlay) {
+            CameraOverlay(
+                onImageCaptured = { file ->
+                    val callback = filePathCallback
+                    if (callback != null) {
+                        // HTML <input type=file> path: hand the photo back as a Uri.
+                        val uri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            file,
+                        )
+                        callback.onReceiveValue(arrayOf(uri))
+                        filePathCallback = null
+                    } else {
+                        // JS-bridge path: deliver as a data URL via the shared callback.
+                        webViewRef?.let { injectFileAsDataUrl(it, file, scope) }
+                    }
+                    showCameraOverlay = false
+                },
+                onClose = {
+                    // Dismissed without capturing — release the file input.
+                    filePathCallback?.onReceiveValue(null)
+                    filePathCallback = null
+                    showCameraOverlay = false
+                },
+            )
+        }
+    }
+}
+
+/**
+ * JS-bridge delivery (mirrors the iOS `sendImageToWeb`): encodes the captured file
+ * to a Base64 data URL off the main thread and hands it to the page via the shared
+ * `window.receiveCameraImage(...)` callback. Feature-guarded, so it is a no-op if
+ * the web app hasn't defined the handler. Base64 is `A–Z a–z 0–9 + / =`, safe inside
+ * the single-quoted JS string with no escaping.
+ */
+private fun injectFileAsDataUrl(webView: WebView, file: File, scope: CoroutineScope) {
+    scope.launch {
+        val dataUrl = withContext(Dispatchers.IO) {
+            "data:image/jpeg;base64," + Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)
+        }
+        val js = "if (typeof window.receiveCameraImage === 'function') " +
+                "{ window.receiveCameraImage('$dataUrl'); }"
+        webView.evaluateJavascript(js, null)
     }
 }
 
@@ -453,12 +474,6 @@ private fun SourceItem(
         Spacer(modifier = Modifier.width(16.dp))
         Text(text = text, style = MaterialTheme.typography.bodyLarge)
     }
-}
-
-private fun createTempImageFile(context: Context): File {
-    val directory = File(context.externalCacheDir, "Images")
-    if (!directory.exists()) directory.mkdirs()
-    return File.createTempFile("CAPTURED_", ".jpg", directory)
 }
 
 @Composable
