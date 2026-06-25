@@ -11,6 +11,13 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
+    <!-- Push Notifications: required on Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Allows this app's notification channel to bypass Do Not Disturb.
+         The user must explicitly grant this via Settings > Apps > Special app access. -->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+
     <!-- Features used by the app -->
     <uses-feature
         android:name="android.hardware.camera"
@@ -31,16 +38,35 @@
         android:theme="@style/Theme.HisaabAssistant"
         android:usesCleartextTraffic="false"
         tools:targetApi="31">
+
         <activity
             android:name=".presentation.MainActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:exported="true"
+            android:launchMode="singleTop"
             android:theme="@style/Theme.HisaabAssistant">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- FCM service: receives tokens and data-only messages in all app states -->
+        <service
+            android:name=".data.notification.HisaabFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Default FCM notification channel and icon used when the app is in background -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="hisaab_default" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Small notification icon for MyHisaab.
+  Must be white/transparent only — the system tints it with the accent colour.
+  Mirrors the app's "H" lettermark at 24dp canvas.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Left vertical bar of H -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M3,3 h3 v18 h-3 z" />
+
+    <!-- Right vertical bar of H -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M18,3 h3 v18 h-3 z" />
+
+    <!-- Crossbar of H -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M6,10.5 h12 v3 h-12 z" />
+</vector>
