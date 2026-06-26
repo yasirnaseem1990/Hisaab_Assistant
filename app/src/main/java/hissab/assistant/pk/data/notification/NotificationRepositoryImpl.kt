@@ -1,6 +1,7 @@
 package hissab.assistant.pk.data.notification
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import hissab.assistant.pk.domain.repository.NotificationRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -18,14 +19,14 @@ class NotificationRepositoryImpl @Inject constructor(
 ) : NotificationRepository {
 
     override suspend fun saveToken(token: String) {
-        prefs.edit().putString(KEY_FCM_TOKEN, token).apply()
+        prefs.edit { putString(KEY_FCM_TOKEN, token) }
     }
 
     override suspend fun getToken(): String? =
         prefs.getString(KEY_FCM_TOKEN, null)
 
     override suspend fun deleteToken() {
-        prefs.edit().remove(KEY_FCM_TOKEN).apply()
+        prefs.edit { remove(KEY_FCM_TOKEN) }
     }
 
     companion object {

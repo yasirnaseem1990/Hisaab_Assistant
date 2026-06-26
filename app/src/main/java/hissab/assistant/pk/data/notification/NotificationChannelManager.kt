@@ -36,7 +36,7 @@ class NotificationChannelManager @Inject constructor(
     fun canBypassDnd(): Boolean =
         (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).isNotificationPolicyAccessGranted
 
-    private fun defaultChannel() = NotificationChannel(
+    private fun defaultChannel(): NotificationChannel = NotificationChannel(
         NotificationPayload.CHANNEL_DEFAULT,
         "MyHisaab Notifications",
         NotificationManager.IMPORTANCE_DEFAULT,
@@ -44,7 +44,7 @@ class NotificationChannelManager @Inject constructor(
         description = "General notifications from MyHisaab"
     }
 
-    private fun priorityChannel() = NotificationChannel(
+    private fun priorityChannel(): NotificationChannel = NotificationChannel(
         NotificationPayload.CHANNEL_PRIORITY,
         "MyHisaab Priority Alerts",
         NotificationManager.IMPORTANCE_HIGH,

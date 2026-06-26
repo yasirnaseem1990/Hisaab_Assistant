@@ -1,6 +1,9 @@
 package hissab.assistant.pk.presentation
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +28,10 @@ import hissab.assistant.pk.presentation.webview.WebViewScreen
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        private const val TAG = "MainActivity"
+    }
+
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { /* no-op */ }
 
@@ -35,6 +42,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        handleSharedImage(intent)
         requestNotificationPermissionIfNeeded()
         setContent {
             HisaabAssistantTheme {
@@ -46,6 +54,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleSharedImage(intent)
+    }
+
+    private fun handleSharedImage(intent: Intent) {
+        if (intent.action != Intent.ACTION_SEND) return
+        if (!intent.type.orEmpty().startsWith("image/")) return
+
+        val imageUri: Uri? = intent.getParcelableExtra(Intent.EXTRA_STREAM)
+        Log.d(TAG, "Shared image URI: $imageUri")
+        // TODO: pass imageUri to ViewModel / WebView bridge
     }
 
     private fun requestNotificationPermissionIfNeeded() {

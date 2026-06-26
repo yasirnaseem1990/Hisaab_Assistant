@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Small notification icon for MyHisaab.
-  Must be white/transparent only — the system tints it with the accent colour.
-  Mirrors the app's "H" lettermark at 24dp canvas.
+  Small notification icon — MyHisaab "H" lettermark.
+  Rules (Android 5.0+ / Material 3):
+    • Fill must be #FFFFFF; the system ignores RGB and renders only the alpha
+      channel, tinting the result with the accent colour supplied via setColor().
+    • Strokes ≥ 4dp on a 24dp canvas so pixels survive status-bar downscaling.
+    • No background fill — transparent pixels become invisible in every theme.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
@@ -10,18 +13,19 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- Left vertical bar of H -->
+    <!-- Left vertical bar -->
     <path
-        android:fillColor="@android:color/white"
-        android:pathData="M3,3 h3 v18 h-3 z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M2,2 h5 v20 h-5 z" />
 
-    <!-- Right vertical bar of H -->
+    <!-- Right vertical bar -->
     <path
-        android:fillColor="@android:color/white"
-        android:pathData="M18,3 h3 v18 h-3 z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M17,2 h5 v20 h-5 z" />
 
-    <!-- Crossbar of H -->
+    <!-- Crossbar — taller than before so it reads at status-bar scale -->
     <path
-        android:fillColor="@android:color/white"
-        android:pathData="M6,10.5 h12 v3 h-12 z" />
+        android:fillColor="#FFFFFF"
+        android:pathData="M7,9 h10 v6 h-10 z" />
+
 </vector>

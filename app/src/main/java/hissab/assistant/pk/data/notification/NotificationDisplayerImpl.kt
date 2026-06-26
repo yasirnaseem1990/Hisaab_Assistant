@@ -1,18 +1,19 @@
 package hissab.assistant.pk.data.notification
 
 import android.app.PendingIntent
+import android.app.PendingIntent.getActivity
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import dagger.hilt.android.qualifiers.ApplicationContext
 import hissab.assistant.pk.R
 import hissab.assistant.pk.domain.model.NotificationPayload
 import hissab.assistant.pk.domain.repository.NotificationDisplayer
 import hissab.assistant.pk.presentation.MainActivity
 import java.util.concurrent.atomic.AtomicInteger
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -37,6 +38,7 @@ class NotificationDisplayerImpl @Inject constructor(
 
         val notification = NotificationCompat.Builder(context, payload.channelId)
             .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(context, R.color.brand_orange))
             .setLargeIcon(largeBitmap)
             .setContentTitle(payload.title.ifBlank { null })
             .setContentText(payload.body.ifBlank { null })
@@ -56,17 +58,19 @@ class NotificationDisplayerImpl @Inject constructor(
     }
 
     private fun buildTapIntent(payload: NotificationPayload): PendingIntent {
-        val intent = Intent(context, MainActivity::class.java).apply {
+        val intent: Intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
             payload.deepLink?.let { putExtra(EXTRA_DEEP_LINK, it) }
             payload.data.forEach { (k, v) -> putExtra(k, v) }
         }
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val flags: Int =
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        } else {
-            PendingIntent.FLAG_UPDATE_CURRENT
-        }
-        return PendingIntent.getActivity(context, idCounter.get(), intent, flags)
+        return getActivity(
+            context,
+            idCounter.get(),
+            intent,
+            flags
+        )
     }
 
     companion object {
