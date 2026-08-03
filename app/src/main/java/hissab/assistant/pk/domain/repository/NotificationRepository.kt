@@ -1,5 +1,7 @@
 package hissab.assistant.pk.domain.repository
 
+import kotlinx.coroutines.flow.Flow
+
 /**
  * Contract for persisting and retrieving the FCM registration token.
  *
@@ -12,4 +14,18 @@ interface NotificationRepository {
     suspend fun saveToken(token: String)
     suspend fun getToken(): String?
     suspend fun deleteToken()
+
+    /**
+     * Emits the last-known token immediately (or null if none) and then every
+     * subsequent change — including mid-session rotations delivered through
+     * the FCM service's `onNewToken`.
+     */
+    fun observeToken(): Flow<String?>
+
+    /**
+     * Fetches a fresh registration token from the push provider, persists it,
+     * and returns it. Throws if the provider is unavailable (e.g. missing
+     * Google Play services); callers wrap this in a [Result].
+     */
+    suspend fun fetchToken(): String
 }

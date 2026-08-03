@@ -4,12 +4,16 @@ import android.content.SharedPreferences
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class NotificationRepositoryImplTest {
 
     private lateinit var prefs: SharedPreferences
@@ -22,7 +26,7 @@ class NotificationRepositoryImplTest {
         prefs = mockk {
             every { edit() } returns editor
         }
-        repository = NotificationRepositoryImpl(prefs)
+        repository = NotificationRepositoryImpl(prefs, UnconfinedTestDispatcher())
     }
 
     // ── saveToken ─────────────────────────────────────────────────────────────
@@ -86,5 +90,36 @@ class NotificationRepositoryImplTest {
         repository.deleteToken()
 
         verify(exactly = 0) { editor.putString(any(), any()) }
+    }
+
+    // ── observeToken ──────────────────────────────────────────────────────────
+
+    @Test
+    fun `observeToken seeds first emission from disk`() = runTest {
+        every { prefs.getString(NotificationRepositoryImpl.KEY_FCM_TOKEN, null) } returns "disk-token"
+
+        val first = repository.observeToken().first { it != null }
+
+        assertEquals("disk-token", first)
+    }
+
+    @Test
+    fun `observeToken reflects saveToken without re-reading disk`() = runTest {
+        every { editor.putString(any(), any()) } returns editor
+
+        repository.saveToken("rotated-token")
+
+        assertEquals("rotated-token", repository.observeToken().first())
+        // Save marked the in-memory value authoritative; no disk seed needed.
+        verify(exactly = 0) { prefs.getString(any(), any()) }
+    }
+
+    @Test
+    fun `observeToken emits null after deleteToken`() = runTest {
+        every { editor.remove(any()) } returns editor
+
+        repository.deleteToken()
+
+        assertNull(repository.observeToken().first())
     }
 }

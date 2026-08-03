@@ -14,10 +14,10 @@ android {
         applicationId = "hissab.assistant.pk"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.7"
+        versionCode = 9
+        versionName = "1.8"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnit4"
+        testInstrumentationRunner = "hissab.assistant.pk.HiltTestRunner"
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -96,10 +96,15 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
+    // Real org.json for local unit tests (the android.jar stub throws at runtime);
+    // used by FcmTokenScript escaping tests.
+    testImplementation(libs.org.json)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.hilt.android.testing)
+    kspAndroidTest(libs.hilt.compiler)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }
