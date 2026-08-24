@@ -67,13 +67,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hissab.assistant.pk.R
 import kotlinx.coroutines.launch
@@ -114,15 +114,14 @@ fun CameraOverlay(
     var hasCameraPermission by remember {
         mutableStateOf(context.hasPermission(Manifest.permission.CAMERA))
     }
-    var permissionDenied by remember { mutableStateOf(false) }
+    var permissionDenied by remember { mutableStateOf(value = false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { granted ->
-            hasCameraPermission = granted
-            permissionDenied = !granted
-        },
-    )
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasCameraPermission = granted
+        permissionDenied = !granted
+    }
 
     // One CameraX controller for both preview and capture; bound to the lifecycle.
     // The initial lens is set here (not via the toggle effect below) so the first

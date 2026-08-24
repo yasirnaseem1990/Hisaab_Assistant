@@ -11,4 +11,10 @@ data class WebViewUiState(
     val isLoading: Boolean = true,
     val progress: Int = 0,
     val errorMessage: String? = null,
+    /**
+     * Monotonic counter incremented on every completed page load. Navigations
+     * and reloads wipe `window`-scoped injections, so the FCM token injector
+     * keys off this to re-run after each load (0 = nothing loaded yet).
+     */
+    val pageLoadCount: Int = 0,
 )

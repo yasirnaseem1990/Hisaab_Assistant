@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "414457902393",
+    "project_id": "myhissab-831c2",
+    "storage_bucket": "myhissab-831c2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:414457902393:android:e7170e3bb6448da779a4e8",
+        "android_client_info": {
+          "package_name": "hissab.assistant.pk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkiqo7Wkr9w57VdDADI0ur43OJhHShJ-g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -12,4 +12,7 @@
     <!-- Brand colors sampled from the web app's primary buttons -->
     <color name="brand_orange">#FFBF441F</color>
     <color name="brand_orange_dark">#FF8C2F12</color>
+
+    <!-- Accent colour used for the small notification icon circle (Android 12+) -->
+    <color name="notification_accent">#FFBF441F</color>
 </resources>

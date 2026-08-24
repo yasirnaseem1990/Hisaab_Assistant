@@ -8,6 +8,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.util.Base64
+import android.util.Log
 import android.view.ViewGroup
 import android.webkit.PermissionRequest
 import android.webkit.RenderProcessGoneDetail
@@ -49,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,16 +60,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hissab.assistant.pk.R
 import hissab.assistant.pk.presentation.camera.CameraOverlay
@@ -89,12 +91,13 @@ fun WebViewScreen(
     viewModel: WebViewViewModel = hiltViewModel(),
 ) {
     val uiState: WebViewUiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val fcmToken: String? by viewModel.fcmToken.collectAsStateWithLifecycle()
     val context: Context = LocalContext.current
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     val scope: CoroutineScope = rememberCoroutineScope()
 
     // Reference to WebView for back-nav and lifecycle management
-    var webViewRef: WebView? by remember { mutableStateOf<WebView?>(null) }
+    var webViewRef: WebView? by remember { mutableStateOf(null) }
     var canGoBack: Boolean by remember { mutableStateOf(false) }
 
     // Controls visibility of the native in-app camera overlay, opened via the
@@ -102,7 +105,7 @@ fun WebViewScreen(
     var showCameraOverlay: Boolean by remember { mutableStateOf(false) }
 
     // --- State for Image Picking ---
-    var filePathCallback: ValueCallback<Array<Uri>>? by remember { mutableStateOf<ValueCallback<Array<Uri>>?>(null) }
+    var filePathCallback: ValueCallback<Array<Uri>>? by remember { mutableStateOf(null) }
     var showImageSourceSheet: Boolean by remember { mutableStateOf(false) }
     val sheetState: SheetState = rememberModalBottomSheetState()
 
@@ -136,6 +139,24 @@ fun WebViewScreen(
     // Handle System Back Button
     BackHandler(enabled = canGoBack) {
         webViewRef?.goBack()
+    }
+
+    // --- FCM token injection (mirrors iOS `injectFCMToken`) ---
+    // Re-runs when: (a) the token first arrives or rotates mid-session, and
+    // (b) every completed page load — navigations wipe window-scoped globals,
+    // so injecting once (the iOS approach) silently loses the token on reload.
+    // evaluateJavascript must run on the main thread; LaunchedEffect does.
+    LaunchedEffect(fcmToken, uiState.pageLoadCount, webViewRef) {
+        val token: String? = fcmToken
+        val webView: WebView? = webViewRef
+        if (token.isNullOrBlank() || uiState.pageLoadCount == 0 || webView == null) {
+            return@LaunchedEffect
+        }
+        webView.evaluateJavascript(FcmTokenScript.build(token)) { result ->
+            // evaluateJavascript reports "null" on success for statements;
+            // log only for diagnosability, never surface to the user.
+            Log.d("WebViewScreen", "FCM token injected into web (result=$result)")
+        }
     }
 
     // Lifecycle Management: Pause WebView when app is in background
@@ -250,11 +271,8 @@ fun WebViewScreen(
                         loadUrl(uiState.url)
                     }
                 },
-                update = { view ->
+                update = { _ ->
                     // Handle dynamic URL updates if necessary
-                    if (view.url != uiState.url && uiState.url.isNotBlank()) {
-                        // view.loadUrl(uiState.url) // Only if you want to drive URL from ViewModel
-                    }
                 }
             )
         }
@@ -387,7 +405,6 @@ private fun WebView.configureSettings() {
     settings.apply {
         javaScriptEnabled = true
         domStorageEnabled = true
-        databaseEnabled = true
 
         // Fix for Web-based Mic/Camera: Set a standard mobile User Agent
         userAgentString = userAgentString.replace("wv", "") // Remove 'wv' to look like standard Chrome
