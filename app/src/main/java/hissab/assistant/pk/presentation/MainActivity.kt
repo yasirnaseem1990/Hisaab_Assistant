@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import dagger.hilt.android.AndroidEntryPoint
 import hissab.assistant.pk.presentation.notification.NotificationPermissionManager
 import hissab.assistant.pk.presentation.theme.HisaabAssistantTheme
-import pk.myhisaab.sdk.ui.MyHisaabView
+import hissab.assistant.pk.presentation.webview.WebViewScreen
 
 /**
  * Single Activity that hosts the Compose UI tree.
@@ -80,8 +80,5 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun HisaabAssistantApp() {
-    MyHisaabView(
-        clientId = "hisaab-assistant-client-id",
-        modifier = Modifier.fillMaxSize()
-    )
+    WebViewScreen(modifier = Modifier.fillMaxSize())
 }
