@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Hisaab Assistant"
 include(":app")
+include(":myhisaabsdk")
