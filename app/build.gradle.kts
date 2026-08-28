@@ -13,9 +13,9 @@ android {
     defaultConfig {
         applicationId = "hissab.assistant.pk"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 9
-        versionName = "1.8"
+        targetSdk = 36
+        versionCode = 11
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "hissab.assistant.pk.HiltTestRunner"
         vectorDrawables {

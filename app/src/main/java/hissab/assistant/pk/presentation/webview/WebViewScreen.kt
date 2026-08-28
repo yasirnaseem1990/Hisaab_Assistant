@@ -3,6 +3,7 @@ package hissab.assistant.pk.presentation.webview
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
@@ -10,8 +11,10 @@ import android.os.Build
 import android.util.Base64
 import android.util.Log
 import android.view.ViewGroup
+import android.webkit.CookieManager
 import android.webkit.PermissionRequest
 import android.webkit.RenderProcessGoneDetail
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -78,6 +81,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+import java.net.URLDecoder
 
 /**
  * Production-ready WebViewScreen using MVVM architecture.
@@ -259,11 +265,38 @@ fun WebViewScreen(
                             }
                         }
 
+                        setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+                            handleDownload(
+                                context = context,
+                                webView = this,
+                                scope = scope,
+                                url = url,
+                                contentDisposition = contentDisposition,
+                                mimeType = mimeType
+                            )
+                        }
+
                         // JS bridge: lets the web app open the native camera
-                        // overlay. The bridge marshals the callback to the main
-                        // thread internally, so flipping Compose state here is safe.
+                        // overlay or send downloaded files/blobs to native code.
                         addJavascriptInterface(
-                            WebAppBridge(onOpenCamera = { showCameraOverlay = true }),
+                            WebAppBridge(
+                                onOpenCamera = { showCameraOverlay = true },
+                                onDownloadFile = { dataUrl, fileName ->
+                                    scope.launch(Dispatchers.IO) {
+                                        val file = saveAndPrepareDataUrl(
+                                            context = context,
+                                            dataUrl = dataUrl,
+                                            suggestedFileName = fileName
+                                        )
+                                        if (file != null) {
+                                            val mime = determineMimeType(file, null)
+                                            withContext(Dispatchers.Main) {
+                                                shareFile(context, file, mime)
+                                            }
+                                        }
+                                    }
+                                }
+                            ),
                             WebAppBridge.NAME,
                         )
 
@@ -517,5 +550,204 @@ private fun ErrorOverlay(
                 Text(text = stringResource(id = R.string.retry))
             }
         }
+    }
+}
+
+private fun handleDownload(
+    context: Context,
+    webView: WebView,
+    scope: CoroutineScope,
+    url: String,
+    contentDisposition: String?,
+    mimeType: String?,
+) {
+    if (url.startsWith("blob:")) {
+        val suggestedName = guessFileName(url, contentDisposition, mimeType)
+        val js = """
+            (function() {
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', '$url', true);
+                xhr.responseType = 'blob';
+                xhr.onload = function() {
+                    var reader = new FileReader();
+                    reader.onloadend = function() {
+                        if (window.AndroidBridge && typeof window.AndroidBridge.processDataUrl === 'function') {
+                            window.AndroidBridge.processDataUrl(reader.result, '$suggestedName');
+                        }
+                    };
+                    reader.readAsDataURL(xhr.response);
+                };
+                xhr.onerror = function() {
+                    console.error('Failed to fetch blob URL');
+                };
+                xhr.send();
+            })();
+        """.trimIndent()
+        webView.evaluateJavascript(js, null)
+    } else if (url.startsWith("data:")) {
+        scope.launch(Dispatchers.IO) {
+            val file = saveAndPrepareDataUrl(context, url, contentDisposition, mimeType)
+            if (file != null) {
+                val effMime = determineMimeType(file, mimeType)
+                withContext(Dispatchers.Main) {
+                    shareFile(context, file, effMime)
+                }
+            }
+        }
+    } else if (url.startsWith("http://") || url.startsWith("https://")) {
+        scope.launch(Dispatchers.IO) {
+            val file = downloadHttpFile(context, url, contentDisposition, mimeType)
+            if (file != null) {
+                val effMime = determineMimeType(file, mimeType)
+                withContext(Dispatchers.Main) {
+                    shareFile(context, file, effMime)
+                }
+            }
+        }
+    }
+}
+
+private fun saveAndPrepareDataUrl(
+    context: Context,
+    dataUrl: String,
+    contentDisposition: String? = null,
+    givenMimeType: String? = null,
+    suggestedFileName: String? = null,
+): File? {
+    try {
+        val commaIndex = dataUrl.indexOf(',')
+        if (commaIndex == -1) return null
+
+        val header = dataUrl.substring(0, commaIndex)
+        val dataPart = dataUrl.substring(commaIndex + 1)
+        val isBase64 = header.contains(";base64", ignoreCase = true)
+
+        val parsedMime = header.removePrefix("data:")
+            .split(";")
+            .firstOrNull()
+            ?.trim()
+            ?.ifEmpty { null }
+            ?: givenMimeType
+            ?: "application/octet-stream"
+
+        val bytes = if (isBase64) {
+            Base64.decode(dataPart, Base64.DEFAULT)
+        } else {
+            URLDecoder.decode(dataPart, "UTF-8").toByteArray(Charsets.UTF_8)
+        }
+
+        val ext = when {
+            parsedMime.contains("pdf", ignoreCase = true) -> ".pdf"
+            parsedMime.contains("csv", ignoreCase = true) -> ".csv"
+            parsedMime.contains("json", ignoreCase = true) -> ".json"
+            parsedMime.contains("excel", ignoreCase = true) || parsedMime.contains("spreadsheet", ignoreCase = true) -> ".xlsx"
+            else -> ".bin"
+        }
+
+        val filename = suggestedFileName?.ifBlank { null }
+            ?: guessFileName(dataUrl, contentDisposition, parsedMime, ext)
+
+        val downloadsDir = File(context.cacheDir, "downloads").apply { mkdirs() }
+        val targetFile = File(downloadsDir, filename)
+        targetFile.writeBytes(bytes)
+        return targetFile
+    } catch (e: Exception) {
+        Log.e("WebViewScreen", "Error saving Data URL file", e)
+        return null
+    }
+}
+
+private fun downloadHttpFile(
+    context: Context,
+    urlString: String,
+    contentDisposition: String?,
+    mimeType: String?,
+): File? {
+    try {
+        val url = URL(urlString)
+        val connection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "GET"
+
+        val cookie = CookieManager.getInstance().getCookie(urlString)
+        if (!cookie.isNullOrEmpty()) {
+            connection.setRequestProperty("Cookie", cookie)
+        }
+        connection.connect()
+
+        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+            Log.e("WebViewScreen", "HTTP download failed with code ${connection.responseCode}")
+            return null
+        }
+
+        val effMimeType = connection.contentType ?: mimeType ?: "application/octet-stream"
+        val cd = connection.getHeaderField("Content-Disposition") ?: contentDisposition
+        val filename = guessFileName(urlString, cd, effMimeType)
+
+        val downloadsDir = File(context.cacheDir, "downloads").apply { mkdirs() }
+        val targetFile = File(downloadsDir, filename)
+
+        connection.inputStream.use { input ->
+            targetFile.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        return targetFile
+    } catch (e: Exception) {
+        Log.e("WebViewScreen", "Error downloading HTTP file", e)
+        return null
+    }
+}
+
+private fun guessFileName(
+    url: String,
+    contentDisposition: String?,
+    mimeType: String?,
+    defaultExt: String = "",
+): String {
+    var name = URLUtil.guessFileName(url, contentDisposition, mimeType)
+    if (name.equals("downloadfile.bin", ignoreCase = true) || name.equals("downloadfile", ignoreCase = true) || name.endsWith(".bin")) {
+        val ext = when {
+            mimeType?.contains("pdf", ignoreCase = true) == true -> ".pdf"
+            mimeType?.contains("csv", ignoreCase = true) == true -> ".csv"
+            url.contains(".pdf", ignoreCase = true) -> ".pdf"
+            url.contains(".csv", ignoreCase = true) -> ".csv"
+            else -> defaultExt.ifEmpty { ".pdf" }
+        }
+        val prefix = "statement_${System.currentTimeMillis()}"
+        name = "$prefix$ext"
+    }
+    return name
+}
+
+private fun determineMimeType(file: File, fallbackMime: String?): String {
+    val name = file.name.lowercase()
+    return when {
+        name.endsWith(".pdf") -> "application/pdf"
+        name.endsWith(".csv") -> "text/csv"
+        name.endsWith(".xlsx") -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        name.endsWith(".json") -> "application/json"
+        !fallbackMime.isNullOrBlank() && fallbackMime != "application/octet-stream" -> fallbackMime
+        else -> "application/octet-stream"
+    }
+}
+
+private fun shareFile(context: Context, file: File, mimeType: String) {
+    try {
+        val uri: Uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+            type = mimeType
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooserIntent = Intent.createChooser(shareIntent, "Share Document").apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(chooserIntent)
+    } catch (e: Exception) {
+        Log.e("WebViewScreen", "Error opening share sheet for file: ${file.absolutePath}", e)
     }
 }

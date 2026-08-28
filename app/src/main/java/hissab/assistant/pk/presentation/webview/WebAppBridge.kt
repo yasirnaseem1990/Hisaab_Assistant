@@ -32,6 +32,7 @@ import android.webkit.JavascriptInterface
  */
 class WebAppBridge(
     private val onOpenCamera: () -> Unit,
+    private val onDownloadFile: (dataUrl: String, fileName: String?) -> Unit = { _, _ -> },
 ) {
     private val mainHandler = Handler(Looper.getMainLooper())
 
@@ -44,6 +45,22 @@ class WebAppBridge(
     /** Lets the web app feature-detect native camera support before calling [openCamera]. */
     @JavascriptInterface
     fun isCameraAvailable(): Boolean = true
+
+    /**
+     * Receives a converted blob or data URL from JS and delegates to native download/share.
+     */
+    @JavascriptInterface
+    fun processDataUrl(dataUrl: String, fileName: String?) {
+        mainHandler.post { onDownloadFile(dataUrl, fileName) }
+    }
+
+    /**
+     * Entry point for JS to share a file directly via Data URL.
+     */
+    @JavascriptInterface
+    fun shareFile(dataUrl: String, fileName: String?) {
+        mainHandler.post { onDownloadFile(dataUrl, fileName) }
+    }
 
     companion object {
         /** The `window.<NAME>` object the web app talks to. */
