@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gcm_defaultSenderId" translatable="false">414457902393</string>
+    <string name="google_api_key" translatable="false">AIzaSyAkiqo7Wkr9w57VdDADI0ur43OJhHShJ-g</string>
+    <string name="google_app_id" translatable="false">1:414457902393:android:e7170e3bb6448da779a4e8</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyAkiqo7Wkr9w57VdDADI0ur43OJhHShJ-g</string>
+    <string name="google_storage_bucket" translatable="false">myhissab-831c2.firebasestorage.app</string>
+    <string name="project_id" translatable="false">myhissab-831c2</string>
+</resources>

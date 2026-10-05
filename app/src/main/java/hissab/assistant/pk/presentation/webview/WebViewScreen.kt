@@ -467,7 +467,20 @@ private fun createWebViewClient(
 ): WebViewClient = object : WebViewClient() {
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-        // Keep all navigation within this WebView
+        val url = request.url?.toString() ?: return false
+        return handleUrl(view, url)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+        if (view == null || url == null) return false
+        return handleUrl(view, url)
+    }
+
+    private fun handleUrl(view: WebView, url: String): Boolean {
+        if (WebViewUrlHandler.shouldOverrideUrl(url)) {
+            return WebViewUrlHandler.handleExternalUrl(view.context, url)
+        }
         return false
     }
 
@@ -484,6 +497,10 @@ private fun createWebViewClient(
     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
         // Only trigger error for the main frame to avoid 3rd party resource failures breaking the UI
         if (request?.isForMainFrame == true) {
+            val failingUrl = request.url?.toString()
+            if (failingUrl != null && WebViewUrlHandler.shouldOverrideUrl(failingUrl)) {
+                return
+            }
             onError(error?.description?.toString() ?: "Connection Error")
         }
     }
