@@ -2,6 +2,8 @@ package hissab.assistant.pk.presentation.webview
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -23,8 +25,10 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -58,6 +62,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,6 +81,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import hissab.assistant.pk.R
 import hissab.assistant.pk.presentation.camera.CameraOverlay
+import hissab.assistant.pk.presentation.notification.NotificationPermissionManager
+import hissab.assistant.pk.presentation.notification.NotificationSettingsPrompt
+import hissab.assistant.pk.presentation.notification.WhatsAppNotificationGate
+import hissab.assistant.pk.presentation.notification.notificationSettingsIntent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -141,6 +150,72 @@ fun WebViewScreen(
                 pendingPermissionRequest = null
             }
         )
+
+    // --- WhatsApp redirect: offer notifications first (mirrors iOS) ---
+    // The web app opens WhatsApp by navigating to a WhatsApp URL. Before handing
+    // the user off, ask for notifications (or point to Settings once they are
+    // permanently off); WhatsApp opens whatever the user chooses.
+    val activity: Activity? = LocalActivity.current
+    // Checks only: this screen launches the request itself so it can record the
+    // rationale state just before asking (see WhatsAppNotificationGate).
+    val notificationPermission: NotificationPermissionManager? = remember(activity) {
+        activity?.let { NotificationPermissionManager(it, launcher = null) }
+    }
+    var pendingWhatsAppUrl: String? by rememberSaveable { mutableStateOf(null) }
+    var rationaleBeforeRequest: Boolean by rememberSaveable { mutableStateOf(false) }
+    var showNotificationPrompt: Boolean by rememberSaveable { mutableStateOf(false) }
+
+    fun openPendingWhatsApp() {
+        val url = pendingWhatsAppUrl ?: return
+        pendingWhatsAppUrl = null
+        WebViewUrlHandler.handleExternalUrl(context, url)
+    }
+
+    fun openWhatsAppOrShowPrompt(action: WhatsAppNotificationGate.Action) {
+        if (action == WhatsAppNotificationGate.Action.SHOW_SETTINGS_PROMPT) {
+            viewModel.onNotificationPromptShown()
+            showNotificationPrompt = true
+        } else {
+            openPendingWhatsApp()
+        }
+    }
+
+    val notificationPermissionLauncher: ManagedActivityResultLauncher<String, Boolean> =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = { granted ->
+                openWhatsAppOrShowPrompt(
+                    WhatsAppNotificationGate.onPermissionResult(
+                        granted = granted,
+                        rationaleBeforeRequest = rationaleBeforeRequest,
+                        rationaleAfterRequest = notificationPermission?.shouldShowRationale() == true,
+                        promptShownThisLaunch = viewModel.isNotificationPromptShown,
+                    )
+                )
+            }
+        )
+
+    // Fires when the user comes back from Settings, whatever they changed there.
+    val notificationSettingsLauncher: ManagedActivityResultLauncher<Intent, ActivityResult> =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult(),
+            onResult = { openPendingWhatsApp() }
+        )
+
+    val onWhatsAppUrl: (String) -> Unit = { url ->
+        pendingWhatsAppUrl = url
+        val action = WhatsAppNotificationGate.onWhatsAppRequested(
+            notificationsEnabled = notificationPermission?.areNotificationsEnabled() ?: true,
+            canRequestPermission = notificationPermission?.canRequestPermission() == true,
+            promptShownThisLaunch = viewModel.isNotificationPromptShown,
+        )
+        if (action == WhatsAppNotificationGate.Action.REQUEST_PERMISSION) {
+            rationaleBeforeRequest = notificationPermission?.shouldShowRationale() == true
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            openWhatsAppOrShowPrompt(action)
+        }
+    }
 
     // Handle System Back Button
     BackHandler(enabled = canGoBack) {
@@ -216,7 +291,8 @@ fun WebViewScreen(
                                 canGoBack = view?.canGoBack() == true
                                 viewModel.onPageFinished()
                             },
-                            onError = { msg -> viewModel.onError(msg) }
+                            onError = { msg -> viewModel.onError(msg) },
+                            onWhatsAppUrl = onWhatsAppUrl,
                         )
 
                         webChromeClient = object : WebChromeClient() {
@@ -402,6 +478,25 @@ fun WebViewScreen(
                 },
             )
         }
+
+        // --- "Turn On Notifications" prompt before WhatsApp ---
+        if (showNotificationPrompt) {
+            NotificationSettingsPrompt(
+                onOpenSettings = {
+                    showNotificationPrompt = false
+                    try {
+                        notificationSettingsLauncher.launch(notificationSettingsIntent(context))
+                    } catch (e: ActivityNotFoundException) {
+                        Log.w("WebViewScreen", "No notification settings screen; opening WhatsApp", e)
+                        openPendingWhatsApp()
+                    }
+                },
+                onNotNow = {
+                    showNotificationPrompt = false
+                    openPendingWhatsApp()
+                },
+            )
+        }
     }
 }
 
@@ -464,6 +559,7 @@ private fun createWebViewClient(
     onPageStarted: () -> Unit,
     onPageFinished: (WebView?) -> Unit,
     onError: (String) -> Unit,
+    onWhatsAppUrl: (String) -> Unit,
 ): WebViewClient = object : WebViewClient() {
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
@@ -478,6 +574,12 @@ private fun createWebViewClient(
     }
 
     private fun handleUrl(view: WebView, url: String): Boolean {
+        // WhatsApp goes through the notification gate first; the screen opens it
+        // once the permission flow resolves.
+        if (WebViewUrlHandler.isWhatsAppUrl(url)) {
+            onWhatsAppUrl(url)
+            return true
+        }
         if (WebViewUrlHandler.shouldOverrideUrl(url)) {
             return WebViewUrlHandler.handleExternalUrl(view.context, url)
         }

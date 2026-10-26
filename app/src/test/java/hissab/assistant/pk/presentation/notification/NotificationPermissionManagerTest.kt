@@ -112,15 +112,60 @@ class NotificationPermissionManagerTest {
         manager.requestPermission() // must not throw
     }
 
+    // ── areNotificationsEnabled ───────────────────────────────────────────────
+
+    @Test
+    fun `areNotificationsEnabled reports the system toggle below API 33`() {
+        assertTrue(buildManager(sdk = Build.VERSION_CODES.S, notificationsEnabled = true).areNotificationsEnabled())
+        assertFalse(buildManager(sdk = Build.VERSION_CODES.S, notificationsEnabled = false).areNotificationsEnabled())
+    }
+
+    @Test
+    fun `areNotificationsEnabled is false on API 33 when notifications are off even if isGranted is true`() {
+        val manager = buildManager(
+            sdk = Build.VERSION_CODES.TIRAMISU,
+            permissionResult = PackageManager.PERMISSION_GRANTED,
+            notificationsEnabled = false,
+        )
+
+        assertTrue(manager.isGranted())
+        assertFalse(manager.areNotificationsEnabled())
+    }
+
+    // ── canRequestPermission ──────────────────────────────────────────────────
+
+    @Test
+    fun `canRequestPermission returns false below API 33`() {
+        val manager = buildManager(sdk = Build.VERSION_CODES.S, permissionResult = PackageManager.PERMISSION_DENIED)
+
+        assertFalse(manager.canRequestPermission())
+    }
+
+    @Test
+    fun `canRequestPermission returns true on API 33 when not granted`() {
+        val manager = buildManager(sdk = Build.VERSION_CODES.TIRAMISU, permissionResult = PackageManager.PERMISSION_DENIED)
+
+        assertTrue(manager.canRequestPermission())
+    }
+
+    @Test
+    fun `canRequestPermission returns false on API 33 when already granted`() {
+        val manager = buildManager(sdk = Build.VERSION_CODES.TIRAMISU, permissionResult = PackageManager.PERMISSION_GRANTED)
+
+        assertFalse(manager.canRequestPermission())
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun buildManager(
         sdk: Int,
         permissionResult: Int = PackageManager.PERMISSION_DENIED,
+        notificationsEnabled: Boolean = true,
     ) = NotificationPermissionManager(
         activity = activity,
         launcher = launcher,
         sdkVersionProvider = { sdk },
         permissionChecker = { permissionResult },
+        notificationsEnabledChecker = { notificationsEnabled },
     )
 }

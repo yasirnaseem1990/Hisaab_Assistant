@@ -111,6 +111,18 @@ class WebViewViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true, errorMessage = null, progress = 0) }
     }
 
+    /**
+     * Whether the "Turn On Notifications" prompt has been shown since the app
+     * started. It appears at most once per launch so repeat WhatsApp taps aren't
+     * nagged; held here so a configuration change doesn't reset it.
+     */
+    var isNotificationPromptShown: Boolean = false
+        private set
+
+    fun onNotificationPromptShown() {
+        isNotificationPromptShown = true
+    }
+
     private companion object {
         const val TAG = "WebViewViewModel"
 

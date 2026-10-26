@@ -14,4 +14,10 @@
     <string name="camera_grant_permission">Allow camera</string>
     <string name="open_settings">Open settings</string>
     <string name="cancel">Cancel</string>
+
+    <!-- Shown before opening WhatsApp when notifications are off (copy matches iOS) -->
+    <string name="notification_prompt_title">Turn On Notifications</string>
+    <string name="notification_prompt_message">Please enable push notifications in Settings to stay updated and continue to the MyHisaab WhatsApp channel.</string>
+    <string name="notification_prompt_open_settings">Open Settings</string>
+    <string name="notification_prompt_not_now">Not Now</string>
 </resources>

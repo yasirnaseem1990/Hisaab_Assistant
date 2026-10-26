@@ -126,6 +126,14 @@ class WebViewUrlHandlerTest {
         assertFalse(WebViewUrlHandler.isWhatsAppUrl("tel:+923444472282"))
     }
 
+    @Test
+    fun `isWhatsAppUrl detects WhatsApp channel links with and without www`() {
+        assertTrue(WebViewUrlHandler.isWhatsAppUrl("https://whatsapp.com/channel/0029VaExample"))
+        assertTrue(WebViewUrlHandler.isWhatsAppUrl("https://www.whatsapp.com/channel/0029VaExample"))
+        assertTrue(WebViewUrlHandler.shouldOverrideUrl("https://whatsapp.com/channel/0029VaExample"))
+        assertFalse(WebViewUrlHandler.isWhatsAppUrl("https://notwhatsapp.com/channel/0029VaExample"))
+    }
+
     // ── handleExternalUrl: Launching and Fallback Behavior ─────────────────────
 
     @Test

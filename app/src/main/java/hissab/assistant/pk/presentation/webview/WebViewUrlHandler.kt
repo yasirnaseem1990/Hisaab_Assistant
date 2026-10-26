@@ -62,11 +62,12 @@ object WebViewUrlHandler {
     }
 
     /**
-     * Identifies if a web URL points to WhatsApp web redirect services (wa.me / api.whatsapp.com).
+     * Identifies if a web URL points to WhatsApp web redirect services (wa.me / api.whatsapp.com)
+     * or a WhatsApp channel link (whatsapp.com/channel/...).
      */
     fun isWhatsAppWebUrl(url: String): Boolean {
         val host = extractHost(url)
-        return host == "wa.me" || host == "api.whatsapp.com" || host.endsWith(".whatsapp.com")
+        return host == "wa.me" || host == "whatsapp.com" || host.endsWith(".whatsapp.com")
     }
 
     /**
