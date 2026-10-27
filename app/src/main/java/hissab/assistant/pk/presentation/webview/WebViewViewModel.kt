@@ -112,15 +112,16 @@ class WebViewViewModel @Inject constructor(
     }
 
     /**
-     * Whether the "Turn On Notifications" prompt has been shown since the app
-     * started. It appears at most once per launch so repeat WhatsApp taps aren't
-     * nagged; held here so a configuration change doesn't reset it.
+     * Whether the notification check before WhatsApp (system dialog or "Turn On
+     * Notifications" prompt) has run since the app started. It runs at most once
+     * per launch so repeat WhatsApp taps aren't nagged; held here so a
+     * configuration change doesn't reset it.
      */
-    var isNotificationPromptShown: Boolean = false
+    var isNotificationCheckDone: Boolean = false
         private set
 
-    fun onNotificationPromptShown() {
-        isNotificationPromptShown = true
+    fun onNotificationCheckDone() {
+        isNotificationCheckDone = true
     }
 
     private companion object {

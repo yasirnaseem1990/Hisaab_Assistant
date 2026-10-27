@@ -151,10 +151,12 @@ fun WebViewScreen(
             }
         )
 
-    // --- WhatsApp redirect: offer notifications first (mirrors iOS) ---
-    // The web app opens WhatsApp by navigating to a WhatsApp URL. Before handing
-    // the user off, ask for notifications (or point to Settings once they are
-    // permanently off); WhatsApp opens whatever the user chooses.
+    // --- Notification check before WhatsApp (mirrors iOS) ---
+    // Triggered by the web app's MyHisaabAndroid.checkNotificationPermission call
+    // (first WhatsApp tap) and by any navigation to a WhatsApp URL. Asks for
+    // notifications, or points to Settings once they are permanently off, at most
+    // once per launch; then replies to the web app and/or opens WhatsApp, whatever
+    // the user chose.
     val activity: Activity? = LocalActivity.current
     // Checks only: this screen launches the request itself so it can record the
     // rationale state just before asking (see WhatsAppNotificationGate).
@@ -162,21 +164,34 @@ fun WebViewScreen(
         activity?.let { NotificationPermissionManager(it, launcher = null) }
     }
     var pendingWhatsAppUrl: String? by rememberSaveable { mutableStateOf(null) }
+    var isNotificationCheckRunning: Boolean by rememberSaveable { mutableStateOf(false) }
     var rationaleBeforeRequest: Boolean by rememberSaveable { mutableStateOf(false) }
     var showNotificationPrompt: Boolean by rememberSaveable { mutableStateOf(false) }
+    // Replies only matter to the page that asked, so these needn't survive process death.
+    val pendingCheckRequests: MutableList<NotificationCheckRequest> = remember { mutableListOf() }
 
-    fun openPendingWhatsApp() {
-        val url = pendingWhatsAppUrl ?: return
-        pendingWhatsAppUrl = null
-        WebViewUrlHandler.handleExternalUrl(context, url)
+    fun finishNotificationCheck() {
+        isNotificationCheckRunning = false
+        val status = if (notificationPermission?.areNotificationsEnabled() != false) {
+            NotificationPermissionScript.STATUS_GRANTED
+        } else {
+            NotificationPermissionScript.STATUS_DENIED
+        }
+        pendingCheckRequests.forEach { request ->
+            webViewRef?.evaluateJavascript(NotificationPermissionScript.reply(request, status), null)
+        }
+        pendingCheckRequests.clear()
+        pendingWhatsAppUrl?.let { url ->
+            pendingWhatsAppUrl = null
+            WebViewUrlHandler.handleExternalUrl(context, url)
+        }
     }
 
-    fun openWhatsAppOrShowPrompt(action: WhatsAppNotificationGate.Action) {
+    fun finishOrShowPrompt(action: WhatsAppNotificationGate.Action) {
         if (action == WhatsAppNotificationGate.Action.SHOW_SETTINGS_PROMPT) {
-            viewModel.onNotificationPromptShown()
             showNotificationPrompt = true
         } else {
-            openPendingWhatsApp()
+            finishNotificationCheck()
         }
     }
 
@@ -184,12 +199,11 @@ fun WebViewScreen(
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission(),
             onResult = { granted ->
-                openWhatsAppOrShowPrompt(
+                finishOrShowPrompt(
                     WhatsAppNotificationGate.onPermissionResult(
                         granted = granted,
                         rationaleBeforeRequest = rationaleBeforeRequest,
                         rationaleAfterRequest = notificationPermission?.shouldShowRationale() == true,
-                        promptShownThisLaunch = viewModel.isNotificationPromptShown,
                     )
                 )
             }
@@ -199,22 +213,39 @@ fun WebViewScreen(
     val notificationSettingsLauncher: ManagedActivityResultLauncher<Intent, ActivityResult> =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.StartActivityForResult(),
-            onResult = { openPendingWhatsApp() }
+            onResult = { finishNotificationCheck() }
         )
 
-    val onWhatsAppUrl: (String) -> Unit = { url ->
-        pendingWhatsAppUrl = url
-        val action = WhatsAppNotificationGate.onWhatsAppRequested(
+    fun startNotificationCheck() {
+        // A check already in progress also finishes this trigger (see finishNotificationCheck).
+        if (isNotificationCheckRunning) return
+        val action = WhatsAppNotificationGate.onCheckRequested(
             notificationsEnabled = notificationPermission?.areNotificationsEnabled() ?: true,
             canRequestPermission = notificationPermission?.canRequestPermission() == true,
-            promptShownThisLaunch = viewModel.isNotificationPromptShown,
+            checkedThisLaunch = viewModel.isNotificationCheckDone,
         )
+        if (action == WhatsAppNotificationGate.Action.CONTINUE) {
+            finishNotificationCheck()
+            return
+        }
+        isNotificationCheckRunning = true
+        viewModel.onNotificationCheckDone()
         if (action == WhatsAppNotificationGate.Action.REQUEST_PERMISSION) {
             rationaleBeforeRequest = notificationPermission?.shouldShowRationale() == true
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         } else {
-            openWhatsAppOrShowPrompt(action)
+            showNotificationPrompt = true
         }
+    }
+
+    val onWhatsAppUrl: (String) -> Unit = { url ->
+        pendingWhatsAppUrl = url
+        startNotificationCheck()
+    }
+
+    val onNotificationCheckRequested: (NotificationCheckRequest) -> Unit = { request ->
+        pendingCheckRequests += request
+        startNotificationCheck()
     }
 
     // Handle System Back Button
@@ -376,6 +407,13 @@ fun WebViewScreen(
                             WebAppBridge.NAME,
                         )
 
+                        // JS bridge: the web app asks native to check notification
+                        // permission on the first WhatsApp tap.
+                        addJavascriptInterface(
+                            NotificationPermissionBridge(onCheckRequested = onNotificationCheckRequested),
+                            NotificationPermissionBridge.NAME,
+                        )
+
                         webViewRef = this
                         loadUrl(uiState.url)
                     }
@@ -487,13 +525,13 @@ fun WebViewScreen(
                     try {
                         notificationSettingsLauncher.launch(notificationSettingsIntent(context))
                     } catch (e: ActivityNotFoundException) {
-                        Log.w("WebViewScreen", "No notification settings screen; opening WhatsApp", e)
-                        openPendingWhatsApp()
+                        Log.w("WebViewScreen", "No notification settings screen; continuing", e)
+                        finishNotificationCheck()
                     }
                 },
                 onNotNow = {
                     showNotificationPrompt = false
-                    openPendingWhatsApp()
+                    finishNotificationCheck()
                 },
             )
         }
